@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  background:#000;
+}
+
+.board{
+  position:relative;
+  width:2048px;
+  height:1364px;
+  margin:0 auto;
+  background:url("board.png") no-repeat left top / 100% 100%;
+  font-family:"Yu Gothic","Meiryo",sans-serif;
+}
+
+/* タイトル */
+.title-left{
+  position:absolute;
+  top:110px;
+  left:70px;
+  width:900px;
+  text-align:center;
+  color:#fff;
+  font-size:58px;
+}
+
+.title-right{
+  position:absolute;
+  top:110px;
+  right:820px;
+  width:300px;
+  text-align:center;
+  color:#fff;
+  font-size:70px;
+}
+
+/* 各段 */
+.row{
+  position:absolute;
+  width:100%;
+  height:120px;
+}
+
+/* 名前窓 */
+.name-window{
+  position:absolute;
+  left:220px;
+  top:15px;
+  width:700px;
+  height:90px;
+  overflow:hidden;
+}
+
+/* リール */
+.reel{
+  position:absolute;
+  width:100%;
+}
+
+/* 回転中 */
+.spinning{
+  filter:blur(3px);
+}
+
+/* 名前 */
+.item{
+  height:90px;
+  line-height:90px;
+  text-align:center;
+  font-size:48px;
+  color:#fff;
+}
+
+/* 時間 */
+.time{
+  position:absolute;
+  right:850px;
+  top:15px;
+  width:300px;
+  height:90px;
+  line-height:90px;
+  text-align:center;
+  font-size:64px;
+  color:#fff;
+}
+
+/* ランプ */
+.lamp{
+  position:absolute;
+  left:805px;
+  top:22px;
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:rgba(255,245,200,0.12);
+  box-shadow:
+    0 0 6px rgba(255,240,180,0.10),
+    inset 0 0 4px rgba(255,255,255,0.12);
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    opacity 0.25s ease;
+  opacity:0.8;
+}
+
+/* 回転中のうっすら点灯 */
+.lamp.dim{
+  background:rgba(255,235,150,0.24);
+  box-shadow:
+    0 0 10px rgba(255,220,120,0.20),
+    0 0 20px rgba(255,210,80,0.10),
+    inset 0 0 6px rgba(255,255,255,0.16);
+}
+
+/* 停止後の強点灯 */
+.lamp.on{
+  background:radial-gradient(circle at 35% 35%,
+    rgba(255,255,255,1) 0%,
+    rgba(255,245,170,0.98) 30%,
+    rgba(255,215,90,0.92) 62%,
+    rgba(255,175,30,0.82) 100%);
+  box-shadow:
+    0 0 14px rgba(255,225,90,0.95),
+    0 0 30px rgba(255,205,50,0.85),
+    0 0 56px rgba(255,180,20,0.60),
+    inset 0 0 10px rgba(255,255,255,0.9);
+  transform:scale(1.08);
+  opacity:1;
+}
+
+/* 位置 */
+.row1{ top:240px; }
+.row2{ top:360px; }
+.row3{ top:490px; }
+.row4{ top:610px; }
+.row5{ top:750px; }
+.row6{ top:870px; }
+
+</style>
+</head>
+<body>
+
+<div class="board">
+  <div class="title-left">松田聖子リレー</div>
+  <div class="title-right">4月1日</div>
+</div>
+
+<script>
+const board = document.querySelector(".board");
+
+const rows = [
+  { name:"テストA", time:"20:00" },
+  { name:"テストB", time:"20:20" },
+  { name:"ZEROにゃん", time:"20:40" },
+  { name:"めるき", time:"21:00" },
+  { name:"テストC", time:"21:20" },
+  { name:"きゅんきゅん", time:"21:40" }
+];
+
+const allNames = rows.map(r => r.name);
+const ITEM_H = 90;
+
+rows.forEach((data, i) => {
+
+  const row = document.createElement("div");
+  row.className = "row row" + (i + 1);
+
+  const nameWindow = document.createElement("div");
+  nameWindow.className = "name-window";
+
+  const reel = document.createElement("div");
+  reel.className = "reel spinning";
+
+  let html = "";
+  for(let l = 0; l < 6; l++){
+    for(const n of allNames){
+      html += `<div class="item">${n}</div>`;
+    }
+  }
+  reel.innerHTML = html;
+  nameWindow.appendChild(reel);
+
+  const lamp = document.createElement("div");
+  lamp.className = "lamp dim";
+
+  const time = document.createElement("div");
+  time.className = "time";
+  time.textContent = data.time;
+
+  row.appendChild(nameWindow);
+  row.appendChild(lamp);
+  row.appendChild(time);
+  board.appendChild(row);
+
+  let y = 0;
+  let speed = 40;
+  let running = true;
+
+  function loop(){
+    if(!running) return;
+
+    y -= speed;
+    reel.style.transform = `translateY(${y}px)`;
+
+    const loopH = allNames.length * ITEM_H;
+    if(y < -loopH * 2){
+      y += loopH;
+    }
+
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  const stopIndex = allNames.indexOf(data.name);
+  const finalIndex = 4 * allNames.length + stopIndex;
+  const finalY = -(finalIndex * ITEM_H);
+
+  setTimeout(() => {
+    lamp.classList.remove("dim");
+    lamp.classList.add("on");
+
+    running = false;
+
+    const currentY = y;
+
+    reel.classList.remove("spinning");
+    reel.style.transition = "none";
+    reel.style.transform = `translateY(${currentY}px)`;
+
+    requestAnimationFrame(() => {
+      reel.style.transition = "transform 1.8s cubic-bezier(0.2,0.8,0.2,1)";
+      reel.style.transform = `translateY(${finalY}px)`;
+    });
+
+  }, 2500 + i * 1000);
+
+});
+</script>
+
+</body>
+</html>
