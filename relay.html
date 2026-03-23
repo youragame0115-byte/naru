@@ -2,21 +2,32 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
 <style>
-body{
+html, body{
+  width:100%;
+  height:100%;
   margin:0;
+  padding:0;
   background:#000;
+  overflow:hidden;
+}
+
+body{
+  position:relative;
+  font-family:"Yu Gothic","Meiryo",sans-serif;
 }
 
 .board{
-  position:relative;
+  position:absolute;
+  left:50%;
+  top:50%;
   width:2048px;
   height:1364px;
-  margin:0 auto;
   background:url("board.png") no-repeat left top / 100% 100%;
-  font-family:"Yu Gothic","Meiryo",sans-serif;
+  transform-origin:center center;
+  will-change:transform;
 }
 
 /* タイトル */
@@ -154,6 +165,28 @@ body{
 
 <script>
 const board = document.querySelector(".board");
+
+const BASE_W = 2048;
+const BASE_H = 1364;
+
+function fitBoard(){
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const scaleX = vw / BASE_W;
+  const scaleY = vh / BASE_H;
+
+  // 縦横どちらにも収まる倍率
+  const scale = Math.min(scaleX, scaleY);
+
+  board.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+window.addEventListener("load", fitBoard);
+window.addEventListener("resize", fitBoard);
+window.addEventListener("orientationchange", () => {
+  setTimeout(fitBoard, 100);
+});
 
 const rows = [
   { name:"RoseTiara", time:"21:00" },
